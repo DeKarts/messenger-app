@@ -1,0 +1,28 @@
+{
+  "name": "messenger-app",
+  "version": "1.0.0",
+  "description": "Messenger with Windows Auth",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "nodemon src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"No tests yet\" && exit 0",
+    "tunnel": "powershell -ExecutionPolicy Bypass -File scripts/tunnel-quick.ps1",
+    "tunnel:named": "powershell -ExecutionPolicy Bypass -File scripts/tunnel-run.ps1"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "iconv-lite": "^0.7.2",
+    "jsonwebtoken": "^9.0.2",
+    "msnodesqlv8": "^5.1.9",
+    "mssql": "^12.3.1",
+    "multer": "^2.1.1",
+    "nodemailer": "^8.0.6",
+    "tedious": "^19.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

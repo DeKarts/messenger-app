@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль | Business Messenger</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="/src/notifications.js" defer></script>
+    <script src="/src/profile.js" defer></script>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #1e3a5f 0%, #0f2942 100%) !important; box-shadow: 0 2px 8px rgba(30, 58, 95, 0.3);">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+                <img src="/logo.png" alt="Logo" style="height: 35px; object-fit: contain;">
+                <span style="color: white;">В процессе</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Чаты</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="profile.html">Профиль</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="notifications.html">
+                            Уведомления
+                            <span id="notifBadge" class="badge bg-danger rounded-pill position-absolute ms-1" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutBtn">Выйти</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="profile-card">
+                    <!-- Header с аватаром и именем -->
+                    <div class="profile-header-section">
+                        <div class="avatar-container">
+                            <img id="avatarPreview" src="https://via.placeholder.com/150?text=Фото" 
+                                 alt="Аватар" class="avatar-preview">
+                            <label for="avatarInput" class="avatar-edit-icon" title="Изменить фото">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                            </label>
+                            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                        </div>
+                        <h2 id="profileName">Загрузка...</h2>
+                        <p class="profile-identifier" id="profileIdentifier"></p>
+                        <p id="onlineStatus" class="online-status"></p>
+                    </div>
+
+                    <!-- Основная информация -->
+                    <div class="profile-info-section">
+                        <h4 class="section-title">Основная информация</h4>
+                        
+                        <div class="info-grid">
+                            <div class="info-field">
+                                <label class="info-label">Имя</label>
+                                <input type="text" class="info-input" id="displayName" 
+                                       placeholder="Ваше имя" required>
+                            </div>
+                            
+                            <div class="info-field">
+                                <label class="info-label">Фамилия</label>
+                                <input type="text" class="info-input" id="lastName" 
+                                       placeholder="Ваша фамилия" required>
+                            </div>
+                            
+                            <div class="info-field full-width">
+                                <label class="info-label">О себе</label>
+                                <textarea class="info-textarea" id="bio" rows="3" 
+                                          placeholder="Расскажите немного о себе..."></textarea>
+                            </div>
+                            
+                            <div class="info-field">
+                                <label class="info-label">Телефон</label>
+                                <div class="input-with-button">
+                                    <input type="text" class="info-input" id="phoneDisplay" disabled>
+                                    <button class="btn-edit" type="button" id="editPhoneBtn" title="Изменить номер">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="info-field">
+                                <label class="info-label">Email</label>
+                                <div class="input-with-button">
+                                    <input type="text" class="info-input" id="emailDisplay" disabled>
+                                    <button class="btn-edit" type="button" id="editEmailBtn" title="Изменить email">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="info-field full-width">
+                                <label class="info-label">Дата регистрации</label>
+                                <input type="text" class="info-input" id="createdAtDisplay" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Настройки приватности -->
+                    <div class="profile-settings-section">
+                        <h4 class="section-title">Настройки приватности</h4>
+                        
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-content">
+                                    <span class="setting-label">Тёмная тема</span>
+                                </div>
+                                <button class="privacy-toggle-btn" id="toggleThemeBtn">
+                                    <span class="btn-text">ВЫКЛ</span>
+                                </button>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-content">
+                                    <span class="setting-label">Скрыть номер телефона</span>
+                                    <span class="setting-hint">От других пользователей</span>
+                                </div>
+                                <button class="btn-sm privacy-toggle-btn" id="hidePhoneBtn" data-setting="hidePhone">
+                                    <span class="btn-text">ВЫКЛ</span>
+                                </button>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-content">
+                                    <span class="setting-label">Скрыть email</span>
+                                    <span class="setting-hint">От других пользователей</span>
+                                </div>
+                                <button class="btn-sm privacy-toggle-btn" id="hideEmailBtn" data-setting="hideEmail">
+                                    <span class="btn-text">ВЫКЛ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Действия -->
+                    <div class="profile-actions-section">
+                        <button type="submit" class="btn-save-profile" id="saveProfileBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            Сохранить изменения
+                        </button>
+                        <button class="btn-danger-profile" id="deleteAccountBtn">
+                            Удалить аккаунт
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования телефона -->
+    <div class="modal fade" id="editPhoneModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактирование номера телефона</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="phoneCurrentStep">
+                        <p class="mb-3">Текущий номер: <strong id="currentPhoneDisplay"></strong></p>
+                        <button type="button" class="btn btn-primary w-100" id="requestOldPhoneCodeBtn">Подтвердить старый номер</button>
+                        <button type="button" class="btn btn-link w-100 mt-2" id="skipOldPhoneBtn">Добавить новый номер</button>
+                    </div>
+                    
+                    <div id="phoneOldCodeStep" style="display: none;">
+                        <div class="mb-3">
+                            <label for="oldPhoneCode" class="form-label">Код из SMS (старый номер)</label>
+                            <input type="text" id="oldPhoneCode" class="form-control" 
+                                   placeholder="000000" 
+                                   maxlength="6"
+                                   pattern="\d{6}"
+                                   required>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="verifyOldPhoneBtn">Подтвердить</button>
+                    </div>
+                    
+                    <div id="phoneNewStep" style="display: none;">
+                        <div class="mb-3">
+                            <label for="newPhone" class="form-label">Новый номер телефона</label>
+                            <input type="tel" id="newPhone" class="form-control" 
+                                   placeholder="+7 (999) 000-00-00" 
+                                   pattern="[\+]?[78]?[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}"
+                                   required>
+                            <div class="form-text">Введите российский номер в формате +7XXXXXXXXXX</div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="requestNewPhoneCodeBtn">Получить код</button>
+                    </div>
+                    
+                    <div id="phoneNewCodeStep" style="display: none;">
+                        <div class="mb-3">
+                            <label for="newPhoneCode" class="form-label">Код из SMS (новый номер)</label>
+                            <input type="text" id="newPhoneCode" class="form-control" 
+                                   placeholder="000000" 
+                                   maxlength="6"
+                                   pattern="\d{6}"
+                                   required>
+                            <div class="form-text">Код отправлен на <span id="newPhoneDisplayModal"></span></div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="verifyNewPhoneBtn">Подтвердить</button>
+                        <button type="button" class="btn btn-link w-100 mt-2" id="resendNewPhoneCodeBtn">Отправить код повторно</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования email -->
+    <div class="modal fade" id="editEmailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактирование email</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="emailCurrentStep">
+                        <p class="mb-3">Текущий email: <strong id="currentEmailDisplay"></strong></p>
+                        <button type="button" class="btn btn-primary w-100" id="requestOldEmailCodeBtn">Подтвердить старый email</button>
+                        <button type="button" class="btn btn-link w-100 mt-2" id="skipOldEmailBtn">Добавить новый email</button>
+                    </div>
+                    
+                    <div id="emailOldCodeStep" style="display: none;">
+                        <div class="mb-3">
+                            <label for="oldEmailCode" class="form-label">Код из письма (старый email)</label>
+                            <input type="text" id="oldEmailCode" class="form-control" 
+                                   placeholder="000000" 
+                                   maxlength="6"
+                                   pattern="\d{6}"
+                                   required>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="verifyOldEmailBtn">Подтвердить</button>
+                    </div>
+                    
+                    <div id="emailNewStep" style="display: none;">
+                        <div class="mb-3">
+                            <label for="newEmail" class="form-label">Новый email</label>
+                            <input type="email" id="newEmail" class="form-control" 
+                                   placeholder="example@mail.ru" 
+                                   required>
+                            <div class="form-text">На этот email придет код подтверждения</div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="requestNewEmailCodeBtn">Получить код</button>
+                    </div>
+                    
+                    <div id="emailNewCodeStep" style="display: none;">
+                        <div class="mb-3">
+                            <label for="newEmailCode" class="form-label">Код из письма (новый email)</label>
+                            <input type="text" id="newEmailCode" class="form-control" 
+                                   placeholder="000000" 
+                                   maxlength="6"
+                                   pattern="\d{6}"
+                                   required>
+                            <div class="form-text">Код отправлен на <span id="newEmailDisplayModal"></span></div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="verifyNewEmailBtn">Подтвердить</button>
+                        <button type="button" class="btn btn-link w-100 mt-2" id="resendNewEmailCodeBtn">Отправить код повторно</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно загрузки аватара -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Загрузка аватара</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Выбранное изображение</label>
+                        <div id="selectedAvatarInfo" class="p-2 border rounded bg-light d-flex align-items-center gap-2">
+                            <span class="text-muted">Файл не выбран</span>
+                        </div>
+                        <img id="selectedAvatarPreview" class="mt-2 rounded" style="max-height: 150px; display: none;" alt="Preview">
+                    </div>
+                    <div id="uploadProgress" class="progress" style="display: none;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" id="changeAvatarBtn">Изменить фото</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="uploadAvatarBtn">Загрузить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Модальное окно для уведомлений -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="notificationModalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

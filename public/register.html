@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | В процессе</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="/src/register.js" defer></script>
+</head>
+<body class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header text-center py-4">
+                    <img src="/logo.png" alt="Logo" class="logo-small">
+                    <h2>Регистрация</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Выбор способа регистрации -->
+                    <div id="methodStep">
+                        <p class="text-center mb-4" style="color: #64748b;">Выберите способ регистрации:</p>
+                        <button type="button" class="btn btn-outline-primary method-btn w-100 py-3" id="selectPhoneBtn">
+                            По телефону
+                        </button>
+                        <button type="button" class="btn btn-outline-primary method-btn w-100 py-3" id="selectEmailBtn">
+                            По электронной почте
+                        </button>
+                    </div>
+                    
+                    <!-- Ввод телефона -->
+                    <div id="phoneStep" style="display: none;">
+                        <form id="phoneForm">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Номер телефона</label>
+                                <input type="tel" id="phone" class="form-control phone-input" 
+                                       placeholder="+7 (999) 000-00-00" 
+                                       pattern="[\+]?[78]?[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}"
+                                       required>
+                                <div class="form-text">Введите российский номер в формате +7XXXXXXXXXX</div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Получить код</button>
+                            <button type="button" class="btn btn-outline-primary w-100 mt-2" id="backToMethodBtn">← Другой способ</button>
+                        </form>
+                        <div id="phoneError" class="text-danger mt-2 text-center"></div>
+                    </div>
+                    
+                    <!-- Ввод email -->
+                    <div id="emailStep" style="display: none;">
+                        <form id="emailForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" id="email" class="form-control email-input" 
+                                       placeholder="example@mail.ru" 
+                                       required>
+                                <div class="form-text">На email придет код подтверждения</div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Получить код</button>
+                            <button type="button" class="btn btn-outline-primary w-100 mt-2" id="backToMethodBtn2">← Другой способ</button>
+                        </form>
+                        <div id="emailError" class="text-danger mt-2 text-center"></div>
+                    </div>
+                    
+                    <!-- Ввод SMS-кода -->
+                    <div id="phoneCodeStep" style="display: none;">
+                        <form id="phoneCodeForm">
+                            <div class="mb-3">
+                                <label for="phoneCode" class="form-label">SMS-код</label>
+                                <input type="text" id="phoneCode" class="form-control code-input" 
+                                       placeholder="000000" 
+                                       maxlength="6"
+                                       pattern="\d{6}"
+                                       required>
+                                <div class="form-text">Код отправлен на <span id="phoneDisplay"></span></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+                            <button type="button" id="phoneResendBtn" class="btn btn-outline-primary w-100 mt-2">Отправить код повторно</button>
+                        </form>
+                        <div id="phoneCodeError" class="text-danger mt-2 text-center"></div>
+                    </div>
+                    
+                    <!-- Ввод email-кода -->
+                    <div id="emailCodeStep" style="display: none;">
+                        <form id="emailCodeForm">
+                            <div class="mb-3">
+                                <label for="emailCode" class="form-label">Код из письма</label>
+                                <input type="text" id="emailCode" class="form-control code-input" 
+                                       placeholder="000000" 
+                                       maxlength="6"
+                                       pattern="\d{6}"
+                                       required>
+                                <div class="form-text">Код отправлен на <span id="emailDisplay"></span></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+                            <button type="button" id="emailResendBtn" class="btn btn-outline-primary w-100 mt-2">Отправить код повторно</button>
+                        </form>
+                        <div id="emailCodeError" class="text-danger mt-2 text-center"></div>
+                    </div>
+                    
+                    <a href="login.html" class="btn btn-link w-100 mt-3">Уже есть аккаунт? Войти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

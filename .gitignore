@@ -1,0 +1,29 @@
+# Зависимости
+node_modules/
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local
+
+# Пример переменных окружения (не коммить реальный .env!)
+!.env.example
+
+# Логи
+logs/
+*.log
+npm-debug.log*
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# Временные файлы
+*.tmp
+*.temp
+
+# Загрузки
+public/uploads/avatars/*
+!public/uploads/avatars/.gitkeep
+public/uploads/messages/*
+!public/uploads/messages/.gitkeep
