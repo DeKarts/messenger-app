@@ -69,11 +69,12 @@ if (process.env.EMAIL_SERVICE === 'custom' || process.env.EMAIL_HOST) {
     });
 }
 
-// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+// Генерация кода
 
 function generateCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
+// Адаптация номера
 
 function normalizePhone(phone) {
     let digits = phone.replace(/\D/g, '');
@@ -86,7 +87,7 @@ function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// ==================== ПРОВЕРКИ ЗАНЯТОСТИ ====================
+// Првоерка на свободность номера
 
 async function isPhoneTaken(phone, excludeUserId = null) {
     const normalizedPhone = normalizePhone(phone);
@@ -108,6 +109,7 @@ async function isPhoneTaken(phone, excludeUserId = null) {
     }
 }
 
+// Првоерка на свободность почты
 async function isEmailTaken(email, excludeUserId = null) {
     if (!isValidEmail(email)) return false;
     
@@ -127,7 +129,7 @@ async function isEmailTaken(email, excludeUserId = null) {
     }
 }
 
-// ==================== ОТПРАВКА КОДОВ ====================
+// Отправка кода
 
 async function sendSmsCode(phone) {
     const code = generateCode();
@@ -179,7 +181,7 @@ async function sendEmailCode(email) {
     return { code, expiresAt };
 }
 
-// ==================== ЗАПРОС КОДОВ (API) ====================
+// Запрос кода
 
 async function requestSmsCode(phone, userId = null) {
     const normalizedPhone = normalizePhone(phone);
@@ -252,7 +254,7 @@ async function requestEmailCode(email, userId = null) {
     }
 }
 
-// ==================== ВХОД ПО КОДУ ====================
+// Вход по коду
 
 async function loginBySms(phone, code) {
     const normalizedPhone = normalizePhone(phone);
@@ -341,7 +343,7 @@ async function loginByEmail(email, code) {
     }
 }
 
-// ==================== ПРОВЕРКА КОДОВ ====================
+// Проверка кода
 
 async function verifySmsCode(phone, code) {
     const normalizedPhone = normalizePhone(phone);
@@ -386,7 +388,7 @@ async function verifyEmailCode(email, code) {
     }
 }
 
-// ==================== ЗАМЕНА ТЕЛЕФОНА/EMAIL ====================
+// Смена email или номера
 
 async function requestOldPhoneCode(userId) {
     try {
@@ -493,8 +495,6 @@ async function verifyOldEmailCode(userId, code) {
         return { success: false, error: 'Ошибка проверки кода: ' + err.message };
     }
 }
-
-// ==================== ЭКСПОРТ ====================
 
 module.exports = { 
     requestSmsCode, 

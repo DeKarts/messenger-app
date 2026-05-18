@@ -288,12 +288,8 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('darkTheme', isDark ? 'true' : 'false');
         };
     }
-
-    // Загрузка при старте
     loadIncomingRequests();
     loadOutgoingRequests();
-
-    // Автообновление каждые 30 секунд
     setInterval(() => {
         loadIncomingRequests();
         loadOutgoingRequests();

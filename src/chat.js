@@ -138,30 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (replyPreview) replyPreview.style.display = 'none';
     }
     
-    // Обновление непрочитанных
-    async function refreshUnreadCounts() {
-        try {
-            const res = await fetchWithAuth('/api/messages/unread-count');
-            if (!res.ok) return;
-            const counts = await res.json();
-            
-            document.querySelectorAll('#contactsList li[data-contact-id]').forEach(item => {
-                const contactId = parseInt(item.getAttribute('data-contact-id'));
-                const count = counts[contactId] || 0;
-                let badge = item.querySelector('.unread-badge');
-                if (count > 0) {
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'unread-badge';
-                        const nameSpan = item.querySelector('span[style*="flex-grow"]');
-                        if (nameSpan) nameSpan.after(badge);
-                    }
-                    badge.textContent = count;
-                } else if (badge) badge.remove();
-            });
-        } catch (err) {}
-    }
-    
     // Проверка токена
     
     function isTokenExpired(token) {
@@ -243,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return response;
     }
     
-    // ==================== ЗАГРУЗКА ДАННЫХ ====================
+    // Загрузка данных
     
     async function loadMyAvatar() {
         try {
@@ -324,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             let lastDate = null;
             let html = '';
-            let unreadDividerInserted = false;
             
             msgs.forEach(m => {
                 const isMine = m.fromUserId == myUserId;
@@ -338,10 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     lastDate = dateKey;
                 }
                 
-                if (!unreadDividerInserted && !isMine && m.isRead === false) {
-                    html += `<div class="unread-divider"><span>Новые сообщения</span><span class="unread-divider-date">${messageDate}</span></div>`;
-                    unreadDividerInserted = true;
-                }
+                // Удалено: разделитель "Новые сообщения"
                 
                 // Удалённое сообщение
                 if (m.isDeleted === true) {
@@ -413,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    /** Рендер вложения с текстом */
+    // Рендер текста
     function renderFileAttachmentWithText(filePath, isStandalone, messageText, isMine) {
         const fileType = getFileType(filePath);
         const fileName = filePath.split('/').pop();
@@ -443,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </a>`;
     }
     
-    /** Рендер вложения */
+    // Рендер вложения
     function renderFileAttachment(filePath, isStandalone) {
         const fileType = getFileType(filePath);
         const fileName = filePath.split('/').pop();
@@ -515,14 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return { ...contact, fullName };
             }));
             
-            let unreadCounts = {};
-            try {
-                const unreadRes = await fetchWithAuth('/api/messages/unread-count');
-                if (unreadRes.ok) unreadCounts = await unreadRes.json();
-            } catch {}
-            
             list.innerHTML = contactsWithFullInfo.map(contact => {
-                const unreadCount = unreadCounts[contact.id] || 0;
                 const lastMsg = contact.lastMessage || null;
                 let lastMsgText = 'Нет сообщений';
                 if (lastMsg) {
@@ -533,7 +498,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     else lastMsgText = 'Сообщение';
                 }
                 const lastMsgTime = lastMsg && lastMsg.sentAt ? new Date(lastMsg.sentAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '';
-                const badgeHtml = unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : '';
                 
                 // Обрезаем текст последнего сообщения до 15 символов
                 let lastMsgTextTruncated = lastMsgText;
@@ -548,14 +512,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <img src="${contact.avatarUrl || defaultAvatar}" alt="Аватар" class="contact-avatar" onerror="this.src='${defaultAvatar}'">
                         <div style="flex-grow: 1; min-width: 0;">
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
-                                <span style="font-weight: 600; ${unreadCount > 0 ? 'color: var(--primary);' : ''}">${escapeHtml(contact.fullName)}</span>
+                                <span style="font-weight: 600;">${escapeHtml(contact.fullName)}</span>
                                 ${lastMsgTime ? `<span style="font-size: 0.7rem; color: var(--text-muted);">${lastMsgTime}</span>` : ''}
                             </div>
-                            <div style="font-size: 0.85rem; color: ${unreadCount > 0 ? 'var(--primary)' : 'var(--text-muted)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                ${unreadCount > 0 && lastMsg ? `<strong>${escapeHtml(lastMsgTextTruncated)}</strong>` : escapeHtml(lastMsgTextTruncated)}
+                            <div style="font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapeHtml(lastMsgTextTruncated)}
                             </div>
                         </div>
-                        ${badgeHtml}
                     </div>
                     <button class="btn btn-sm btn-outline-danger ms-2" onclick="event.stopPropagation(); removeContact(${contact.id}, '${escapeHtml(contact.fullName)}')" style="flex-shrink: 0;">✕</button>
                 </li>
@@ -566,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==================== ВЫБОР ЧАТА ====================
+    // Выбор чата
     
     window.selectChat = async function(fullName, friendId) {
         const chatSidebar = document.getElementById('chatSidebar');
@@ -651,19 +614,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (friendId) {
             try {
                 await fetchWithAuth(`/api/messages/mark-read/${friendId}`, { method: 'POST' });
-                const contactItem = document.querySelector(`#contactsList li[data-contact-id="${friendId}"]`);
-                if (contactItem) {
-                    const badge = contactItem.querySelector('.unread-badge');
-                    if (badge) badge.remove();
-                }
-                await refreshUnreadCounts();
             } catch {}
         }
         
         setTimeout(() => { if (msgInput) msgInput.focus(); }, 100);
     };
     
-    // ==================== ОТПРАВКА СООБЩЕНИЙ ====================
+    // Отправка сообщения
     
     function setupSendButton() {
         const sendBtn = document.getElementById('sendBtn');
@@ -742,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==================== ГОЛОСОВЫЕ СООБЩЕНИЯ ====================
+    // Голосовые сообщения
     
     function formatVoiceDuration(seconds) {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -862,7 +819,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==================== УПРАВЛЕНИЕ КОНТАКТАМИ ====================
+    // Управление контактами
     
     window.removeContact = async function(contactId, username) {
         if (!confirm(`Удалить ${username} из контактов?`)) return;
@@ -885,7 +842,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // ==================== ПРОФИЛЬ ДРУГА ====================
+    // Профиль друга
     
     window.viewFriendProfile = async function() {
         if (!currentFriendId) return;
@@ -918,7 +875,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // ==================== КОНТЕКСТНОЕ МЕНЮ ====================
+    // Контекстное меню
     
     window.showContextMenu = function(event, messageId, messageText, messageFile = null, isMine = false) {
         event.preventDefault();
@@ -1131,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (replyPreview) replyPreview.style.display = 'none';
     };
     
-    // ==================== УДАЛЕНИЕ/РЕДАКТИРОВАНИЕ ====================
+    // Удаление
     
     window.deleteMessage = async function(messageId) {
         if (!contextMessageIsMine) { showToast('Нельзя удалять чужие сообщения', 'error'); return; }
@@ -1162,6 +1119,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
+    // Редактирвоание
+
     window.editMessage = function(messageId, currentText) {
         if (!messageId || isNaN(messageId)) { showToast('Ошибка: неверный ID сообщения', 'error'); return; }
         editingMessageId = parseInt(messageId);
@@ -1171,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (modalEl) new bootstrap.Modal(modalEl).show();
     };
     
-    // ==================== ПЕРЕСЫЛКА ====================
+    // Пересылка
     
     async function showForwardModal() {
         try {
@@ -1254,7 +1213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // ==================== УВЕДОМЛЕНИЯ ====================
+    // Уведомление
     
     async function checkNotifications() {
         try {
@@ -1268,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) {}
     }
     
-    // ==================== ПРОКРУТКА К СООБЩЕНИЮ ====================
+    // Прокрутка
     
     window.scrollToMessage = function(messageId) {
         if (!messageId) { showToast('Ошибка: ID сообщения не указан', 'error'); return; }
@@ -1284,8 +1243,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => { target.style.background = ''; }, 2000);
         }
     };
-    
-    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
     
     loadMyAvatar();
     loadContacts();
@@ -1522,7 +1479,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     checkNotifications();
-    refreshUnreadCounts();
     setInterval(checkNotifications, 30000);
-    setInterval(refreshUnreadCounts, 15000);
 });

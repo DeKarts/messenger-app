@@ -2,8 +2,6 @@ const { getConnection, sql } = require('./db');
 
 async function sendMessage(fromUserId, toUsername, text) {
     const pool = await getConnection();
-    
-    // Находим получателя (по email, phone, username, displayName)
     const toUser = await pool.request()
         .input('identifier', sql.NVarChar, toUsername)
         .query(`
@@ -21,7 +19,6 @@ async function sendMessage(fromUserId, toUsername, text) {
     const toUserId = toUser.recordset[0].id;
     const fromUserIdInt = typeof fromUserId === 'string' ? parseInt(fromUserId) : fromUserId;
     
-    // Вставляем сообщение с поддержкой Unicode
     await pool.request()
         .input('from_id', sql.Int, fromUserIdInt)
         .input('to_id', sql.Int, toUserId)
@@ -34,7 +31,6 @@ async function sendMessage(fromUserId, toUsername, text) {
 async function getMessages(userId, otherUsername) {
     const pool = await getConnection();
     
-    // Находим собеседника (по email, phone, username, displayName)
     const other = await pool.request()
         .input('identifier', sql.NVarChar, otherUsername)
         .query(`
@@ -53,7 +49,6 @@ async function getMessages(userId, otherUsername) {
     const otherId = other.recordset[0].id;
     const userIdInt = typeof userId === 'string' ? parseInt(userId) : userId;
     
-    // Получаем сообщения
     let result;
     try {
         result = await pool.request()
@@ -94,7 +89,6 @@ async function getMessages(userId, otherUsername) {
                 ORDER BY m.created_at
             `);
     } catch (err) {
-        // Если ошибка, пробуем без поля is_read, но с JOIN'ами для reply/forward
         try {
             result = await pool.request()
                 .input('user1', sql.Int, userIdInt)
@@ -173,7 +167,6 @@ async function getMessages(userId, otherUsername) {
 async function deleteMessage(messageId, userId) {
     const pool = await getConnection();
     
-    // Проверяем, что пользователь является отправителем
     const checkResult = await pool.request()
         .input('messageId', sql.Int, messageId)
         .input('userId', sql.Int, userId)
@@ -187,13 +180,11 @@ async function deleteMessage(messageId, userId) {
         return { error: 'Можно удалять только свои сообщения' };
     }
     
-    // Софт-удаление: помечаем как удалённое вместо реального DELETE
     try {
         await pool.request()
             .input('messageId', sql.Int, messageId)
             .query('UPDATE Messages SET deleted_at = GETDATE() WHERE id = @messageId');
     } catch (err) {
-        // Fallback: если поля deleted_at нет, делаем жёсткое удаление
         await pool.request()
             .input('messageId', sql.Int, messageId)
             .query('DELETE FROM Messages WHERE id = @messageId');
@@ -205,7 +196,6 @@ async function deleteMessage(messageId, userId) {
 async function editMessage(messageId, userId, newText) {
     const pool = await getConnection();
     
-    // Проверяем, что пользователь является отправителем
     const checkResult = await pool.request()
         .input('messageId', sql.Int, messageId)
         .input('userId', sql.Int, userId)
@@ -231,9 +221,7 @@ async function sendFileMessage(fromUserId, toUserId, text, filePaths, forwardedM
     const pool = await getConnection();
     const fromUserIdInt = typeof fromUserId === 'string' ? parseInt(fromUserId) : fromUserId;
     
-    // Сохраняем каждое прикрепление как отдельное сообщение
     for (const filePath of filePaths) {
-        // Если это пересылка, определяем текст для пересланного сообщения
         let finalText = text || '';
         
         if (forwardedMessageId && filePath) {
@@ -247,7 +235,6 @@ async function sendFileMessage(fromUserId, toUserId, text, filePaths, forwardedM
             finalText = forwardOriginalText;
         }
         
-        // Строим запрос с полями пересылки, если они есть
         let query = 'INSERT INTO Messages (from_user_id, to_user_id, text, file_path';
         let values = 'VALUES (@from_id, @to_id, @text, @file_path';
         
@@ -274,7 +261,6 @@ async function sendFileMessage(fromUserId, toUserId, text, filePaths, forwardedM
 async function forwardMessage(fromUserId, toUsername, originalMessageId, forwardedSenderName, forwardOriginalText, forwardedSenderLastName) {
     const pool = await getConnection();
     
-    // Находим оригинальное сообщение
     const originalMessage = await pool.request()
         .input('messageId', sql.Int, originalMessageId)
         .query('SELECT from_user_id, to_user_id, text, file_path FROM Messages WHERE id = @messageId');
@@ -285,7 +271,6 @@ async function forwardMessage(fromUserId, toUsername, originalMessageId, forward
     
     const originalMsg = originalMessage.recordset[0];
     
-    // Находим получателя
     const toUser = await pool.request()
         .input('identifier', sql.NVarChar, toUsername)
         .query(`
@@ -303,15 +288,12 @@ async function forwardMessage(fromUserId, toUsername, originalMessageId, forward
     const toUserId = toUser.recordset[0].id;
     const fromUserIdInt = typeof fromUserId === 'string' ? parseInt(fromUserId) : fromUserId;
     
-    // Проверяем имя отправителя для пересылки
     if (!forwardedSenderName || !forwardedSenderName.trim()) {
         return { error: 'Пересылаемое сообщение должно содержать имя отправителя' };
     }
     
-    // Определяем текст для пересланного сообщения
     let finalText = 'Пересланное сообщение';
     
-    // Если есть файл (голосовое или другой файл), используем соответствующий текст
     if (originalMsg.file_path) {
         const fileName = originalMsg.file_path.split('/').pop().toLowerCase();
         if (fileName.endsWith('.webm') || fileName.endsWith('.mp3') || fileName.endsWith('.m4a')) {
@@ -324,11 +306,8 @@ async function forwardMessage(fromUserId, toUsername, originalMessageId, forward
     } else if (originalMsg.text && originalMsg.text.trim()) {
         finalText = originalMsg.text;
     }
-    
-    // forwardedSenderName уже содержит полное имя (имя + фамилия), так как мы его формируем на бэкенде
     const fullSenderName = forwardedSenderName;
     
-    // Вставляем пересланное сообщение с правильными полями
     await pool.request()
         .input('from_id', sql.Int, fromUserIdInt)
         .input('to_id', sql.Int, toUserId)
@@ -344,7 +323,6 @@ async function forwardMessage(fromUserId, toUsername, originalMessageId, forward
 async function replyMessage(fromUserId, toUsername, text, replyToMessageId) {
     const pool = await getConnection();
     
-    // Находим оригинальное сообщение
     const originalMessage = await pool.request()
         .input('messageId', sql.Int, replyToMessageId)
         .query('SELECT from_user_id, to_user_id, text, file_path FROM Messages WHERE id = @messageId');
@@ -353,7 +331,6 @@ async function replyMessage(fromUserId, toUsername, text, replyToMessageId) {
         return { error: 'Оригинальное сообщение не найдено' };
     }
     
-    // Находим получателя
     const toUser = await pool.request()
         .input('identifier', sql.NVarChar, toUsername)
         .query(`
@@ -371,7 +348,6 @@ async function replyMessage(fromUserId, toUsername, text, replyToMessageId) {
     const toUserId = toUser.recordset[0].id;
     const fromUserIdInt = typeof fromUserId === 'string' ? parseInt(fromUserId) : fromUserId;
     
-    // Вставляем ответное сообщение
     await pool.request()
         .input('from_id', sql.Int, fromUserIdInt)
         .input('to_id', sql.Int, toUserId)
@@ -414,7 +390,6 @@ async function markMessagesAsRead(userId, fromUserId) {
     const fromUserIdInt = typeof fromUserId === 'string' ? parseInt(fromUserId) : fromUserId;
     
     try {
-        // Пробуем обновить сообщения как прочитанные
         await pool.request()
             .input('userId', sql.Int, userIdInt)
             .input('fromId', sql.Int, fromUserIdInt)
@@ -427,8 +402,7 @@ async function markMessagesAsRead(userId, fromUserId) {
             `);
         return { success: true };
     } catch (err) {
-        // Если поле is_read не существует, просто игнорируем ошибку
-        return { success: true }; // Возвращаем успех, чтобы не ломать фронтенд
+        return { success: true };
     }
 }
 

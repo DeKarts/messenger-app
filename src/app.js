@@ -9,7 +9,7 @@ const { requestSmsCode, requestEmailCode, loginBySms, loginByEmail, normalizePho
 const { sendMessage, getMessages, deleteMessage, editMessage, sendFileMessage, forwardMessage, replyMessage, getUnreadCounts, markMessagesAsRead } = require('./messages');
 const { getConnection, sql } = require('./db');
 
-// ==================== ИНИЦИАЛИЗАЦИЯ ====================
+// Инициализация
 
 const app = express();
 app.set('trust proxy', true);
@@ -21,7 +21,7 @@ app.use('/src', express.static(path.join(__dirname)));
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.get('/', (req, res) => res.redirect('/login.html'));
 
-// ==================== ПАПКИ ДЛЯ ЗАГРУЗОК ====================
+// Папки для загрузок
 
 const uploadsDir = path.join(__dirname, '../public/uploads');
 const avatarsDir = path.join(__dirname, '../public/uploads/avatars');
@@ -31,7 +31,7 @@ const messagesDir = path.join(__dirname, '../public/uploads/messages');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// ==================== MULTER НАСТРОЙКИ ====================
+// Настройки multer
 
 const avatarStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, avatarsDir),
@@ -61,7 +61,7 @@ const uploadFiles = multer({
     limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-// ==================== MIDDLEWARE ====================
+// Аутентификация
 
 function auth(req, res, next) {
     const token = req.headers.authorization?.split(' ')[1];
@@ -75,7 +75,6 @@ function auth(req, res, next) {
     }
 }
 
-// ==================== АУТЕНТИФИКАЦИЯ ====================
 
 app.post('/api/request-sms-code', async (req, res) => {
     try {
@@ -137,7 +136,7 @@ app.post('/api/login-by-email', async (req, res) => {
     }
 });
 
-// ==================== ПОДТВЕРЖДЕНИЕ ТЕЛЕФОНА/EMAIL ====================
+// Подтверждения email или номера
 
 app.post('/api/verify-phone', auth, async (req, res) => {
     try {
@@ -175,7 +174,7 @@ app.post('/api/verify-email', auth, async (req, res) => {
     }
 });
 
-// ==================== ЗАМЕНА ТЕЛЕФОНА/EMAIL ====================
+// Замена email или номера
 
 app.post('/api/request-phone-change-code', auth, async (req, res) => {
     try {
@@ -219,7 +218,7 @@ app.post('/api/verify-old-email', auth, async (req, res) => {
     }
 });
 
-// ==================== СООБЩЕНИЯ ====================
+// Сообщения
 
 app.post('/api/message', auth, async (req, res) => {
     try {
@@ -351,7 +350,7 @@ app.post('/api/messages/mark-read/:contactId', auth, async (req, res) => {
     }
 });
 
-// ==================== ПРОФИЛЬ ====================
+// Профиль
 
 app.get('/api/profile/me', auth, async (req, res) => {
     try {
@@ -415,8 +414,6 @@ app.post('/api/profile/avatar', auth, uploadAvatar.single('avatar'), async (req,
         const userId = typeof req.user.id === 'string' ? parseInt(req.user.id) : req.user.id;
         const ext = path.extname(req.file.originalname);
         const avatarUrl = `/uploads/avatars/avatar_${userId}${ext}`;
-        
-        // Удаляем старые аватары
         const extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
         for (const oldExt of extensions) {
             if (oldExt !== ext) {
@@ -481,7 +478,7 @@ app.get('/api/profile/:userId', auth, async (req, res) => {
     }
 });
 
-// ==================== КОНТАКТЫ И ПОИСК ====================
+// Контакты
 
 app.get('/api/users/search', auth, async (req, res) => {
     try {
@@ -609,7 +606,7 @@ app.delete('/api/contacts/:id', auth, async (req, res) => {
     }
 });
 
-// ==================== ЗАПРОСЫ В ДРУЗЬЯ ====================
+// Запросы в друзья
 
 app.post('/api/friend-requests', auth, async (req, res) => {
     try {
@@ -800,7 +797,7 @@ app.get('/api/friend-requests/count', auth, async (req, res) => {
     }
 });
 
-// ==================== ОБРАБОТКА ОШИБОК ====================
+// Обработчик ошибок
 
 app.use((err, req, res, next) => {
     if (res.headersSent) return next(err);
@@ -823,7 +820,7 @@ app.use((req, res) => {
     `);
 });
 
-// ==================== ЗАПУСК СЕРВЕРА ====================
+// запуск севрера
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '127.0.0.1';
