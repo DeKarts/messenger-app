@@ -16,7 +16,6 @@ app.set('trust proxy', true);
 app.disable('x-powered-by');
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
-app.use('/src', express.static(path.join(__dirname)));
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.get('/', (req, res) => res.redirect('/login.html'));
@@ -226,8 +225,7 @@ app.post('/api/message', auth, async (req, res) => {
         if (req.body.replyToMessageId) {
             result = await replyMessage(req.user.id, req.body.to, req.body.text, parseInt(req.body.replyToMessageId));
         } else if (req.body.forwardedMessageId) {
-            result = await forwardMessage(req.user.id, req.body.to, parseInt(req.body.forwardedMessageId),
-            req.body.forwardSenderName, req.body.forwardOriginalText, req.body.forwardSenderLastName);
+            result = await forwardMessage(req.user.id, req.body.to, parseInt(req.body.forwardedMessageId), req.body.forwardSenderName, req.body.forwardOriginalText, req.body.forwardSenderLastName);
         } else {
             result = await sendMessage(req.user.id, req.body.to, req.body.text);
         }
@@ -269,6 +267,7 @@ app.get('/api/messages/:param', auth, async (req, res) => {
         const param = req.params.param;
         const userId = typeof req.user.id === 'string' ? parseInt(req.user.id) : req.user.id;
         const isNumeric = /^\d+$/.test(param);
+        
         if (isNumeric) {
             const pool = await getConnection();
             const result = await pool.request()
@@ -276,20 +275,18 @@ app.get('/api/messages/:param', auth, async (req, res) => {
                 .input('userId', sql.Int, userId)
                 .query(`
                     SELECT m.id, COALESCE(u_from.display_name, u_from.username, u_from.phone, u_from.email) AS fromUser,
-                           u_from.last_name AS fromLastName, COALESCE(u_to.display_name, u_to.username,
-                           u_to.phone, u_to.email) AS toUser,
-                           m.from_user_id AS fromUserId, m.to_user_id AS toUserId, m.text AS messageText, 
-                           m.file_path AS filePath,
-                           m.reply_to_id AS replyToId, m.forwarded_message_id AS forwardedMessageId, 
-                           m.forwarded_sender_name AS forwardedSenderName,
-                           FORMAT(m.created_at, 'yyyy-MM-ddTHH:mm:ss.fff') + '+07:00' AS sentAt, 
-                           m.deleted_at AS deletedAt
+                           u_from.last_name AS fromLastName, COALESCE(u_to.display_name, u_to.username, u_to.phone, u_to.email) AS toUser,
+                           m.from_user_id AS fromUserId, m.to_user_id AS toUserId, m.text AS messageText, m.file_path AS filePath,
+                           m.reply_to_id AS replyToId, m.forwarded_message_id AS forwardedMessageId, m.forwarded_sender_name AS forwardedSenderName,
+                           FORMAT(m.created_at, 'yyyy-MM-ddTHH:mm:ss.fff') + '+07:00' AS sentAt, m.deleted_at AS deletedAt
                     FROM Messages m
                     JOIN Users u_from ON m.from_user_id = u_from.id
                     JOIN Users u_to ON m.to_user_id = u_to.id
                     WHERE m.id = @id AND (m.from_user_id = @userId OR m.to_user_id = @userId)
                 `);
+            
             if (!result.recordset?.[0]) return res.status(404).json({ error: 'Сообщение не найдено' });
+            
             const message = result.recordset[0];
             const fullFromUser = message.fromLastName?.trim() ? `${message.fromUser} ${message.fromLastName}` : message.fromUser;
             res.json({ ...message, fromUser: fullFromUser, isDeleted: !!message.deletedAt });
@@ -346,7 +343,7 @@ app.post('/api/messages/mark-read/:contactId', auth, async (req, res) => {
         const contactId = parseInt(req.params.contactId);
         const result = await markMessagesAsRead(userId, contactId);
         if (result.error) return res.status(500).json({ error: result.error });
-        res.json({ success: true });я
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -597,12 +594,34 @@ app.delete('/api/contacts/:id', auth, async (req, res) => {
         const userId = typeof req.user.id === 'string' ? parseInt(req.user.id) : req.user.id;
         const contactId = parseInt(req.params.id);
         
-        await pool.request()
-            .input('user_id', sql.Int, userId)
-            .input('contact_id', sql.Int, contactId)
-            .query('DELETE FROM Contacts WHERE user_id = @user_id AND contact_id = @contact_id');
+        const transaction = pool.transaction();
         
-        res.json({ success: true });
+        try {
+            await transaction.begin();
+            
+            // Удаляем запись из Contacts
+            await transaction.request()
+                .input('user_id', sql.Int, userId)
+                .input('contact_id', sql.Int, contactId)
+                .query('DELETE FROM Contacts WHERE user_id = @user_id AND contact_id = @contact_id');
+            
+            // Удаляем или обновляем запись в FriendRequests
+            await transaction.request()
+                .input('sender', sql.Int, userId)
+                .input('receiver', sql.Int, contactId)
+                .query("UPDATE FriendRequests SET status = 'declined' WHERE sender_id = @sender AND receiver_id = @receiver AND status = 'accepted'");
+            
+            await transaction.request()
+                .input('sender', sql.Int, contactId)
+                .input('receiver', sql.Int, userId)
+                .query("UPDATE FriendRequests SET status = 'declined' WHERE sender_id = @sender AND receiver_id = @receiver AND status = 'accepted'");
+            
+            await transaction.commit();
+            res.json({ success: true });
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

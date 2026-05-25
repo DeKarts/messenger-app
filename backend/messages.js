@@ -330,6 +330,7 @@ async function replyMessage(fromUserId, toUsername, text, replyToMessageId) {
     if (!originalMessage.recordset || originalMessage.recordset.length === 0) {
         return { error: 'Оригинальное сообщение не найдено' };
     }
+    
     const toUser = await pool.request()
         .input('identifier', sql.NVarChar, toUsername)
         .query(`
@@ -339,6 +340,7 @@ async function replyMessage(fromUserId, toUsername, text, replyToMessageId) {
                OR username = @identifier
                OR display_name = @identifier
         `);
+    
     if (!toUser.recordset || !toUser.recordset[0] || !toUser.recordset[0].id) {
         return { error: 'Получатель не найден' };
     }
@@ -352,6 +354,7 @@ async function replyMessage(fromUserId, toUsername, text, replyToMessageId) {
         .input('text', sql.NVarChar, text)
         .input('reply_to_id', sql.Int, replyToMessageId)
         .query('INSERT INTO Messages (from_user_id, to_user_id, text, reply_to_id) VALUES (@from_id, @to_id, @text, @reply_to_id)');
+    
     return { success: true };
 }
 

@@ -16,7 +16,6 @@ const config = {
 };
 
 let _pool = null;
-
 async function getConnection() {
     if (_pool && _pool.connected) {
         return _pool;

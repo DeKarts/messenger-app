@@ -2,10 +2,10 @@
   "name": "messenger-app",
   "version": "1.0.0",
   "description": "Messenger with Windows Auth",
-  "main": "src/app.js",
+  "main": "backend/app.js",
   "scripts": {
-    "start": "nodemon src/app.js",
-    "dev": "nodemon src/app.js",
+    "start": "nodemon backend/app.js",
+    "dev": "nodemon backend/app.js",
     "test": "echo \"No tests yet\" && exit 0",
     "tunnel": "powershell -ExecutionPolicy Bypass -File scripts/tunnel-quick.ps1",
     "tunnel:named": "powershell -ExecutionPolicy Bypass -File scripts/tunnel-run.ps1"
